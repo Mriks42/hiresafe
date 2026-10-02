@@ -15,6 +15,7 @@ except ImportError:
         return {}
 
 SAMPLES_PATH = Path(__file__).parent / "data" / "sample_messages.json"
+PASTE_OWN = "✍️ Paste my own message"
 
 VERDICT_STYLE = {  # label, background, text color
     "likely_scam": ("🚨 Likely Scam", "#fde2e1", "#b42318"),
@@ -137,15 +138,21 @@ def main() -> None:
     st.caption("Paste a job posting, recruiter email, or text message to check it for scam red flags.")
 
     samples = load_samples()
-    sample_titles = ["(blank)"] + [s["title"] for s in samples]
-    choice = st.selectbox("Try an example", sample_titles)
+    sample_titles = [PASTE_OWN] + [s["title"] for s in samples]
+    choice = st.selectbox("Paste your own message, or load an example", sample_titles)
     default_text = ""
-    if choice != "(blank)":
+    if choice != PASTE_OWN:
         default_text = next(s["text"] for s in samples if s["title"] == choice)
 
-    text = st.text_area("Message to check", value=default_text, height=220)
+    text = st.text_area(
+        "Message to check", value=default_text, height=260,
+        placeholder="Paste a job description, recruiter email, LinkedIn message, or text here…",
+    )
 
-    if st.button("Check", type="primary") and text.strip():
+    clicked = st.button("Check", type="primary")
+    if clicked and not text.strip():
+        st.warning("Paste a message above first.")
+    if clicked and text.strip():
         with st.spinner("Checking with Llama 3.1 on Snowflake Cortex…"):
             result = check(text)
         render_result(text, result)
