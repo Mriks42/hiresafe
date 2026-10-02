@@ -2,6 +2,8 @@
 
 **Paste a job posting, recruiter email, or text message. HireSafe tells you if it's likely a scam, and shows you exactly why.**
 
+**Try it live: [hiresafe-ii84.onrender.com](https://hiresafe-ii84.onrender.com/)** (free hosting, so the first load can take up to a minute)
+
 Built in 4 hours at Hacktoberfest Hack Day Tempe × sunhacks (MLH), on an open-weight model (Meta Llama 3.1 70B) running in Snowflake Cortex.
 
 > ⚠️ HireSafe gives guidance, not a guarantee. A message can look legitimate and still be a scam. Always verify independently before sharing personal information or money.
