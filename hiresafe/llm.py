@@ -24,16 +24,22 @@ def _call(model: str, messages: list[dict], temperature: float, max_tokens: int)
     return resp.json()["choices"][0]["message"]["content"]
 
 
-def chat(messages: list[dict], model: str | None = None,
-         temperature: float = 0.0, max_tokens: int = 1024) -> str:
-    """Send messages to Llama via Cortex. Falls back to the smaller model if the main one fails."""
+def chat_with_model(messages: list[dict], model: str | None = None,
+                    temperature: float = 0.0, max_tokens: int = 1024) -> tuple[str, str]:
+    """Like chat(), but returns (content, model_that_actually_answered)."""
     s = get_settings()
     primary = model or s["model"]
     try:
-        return _call(primary, messages, temperature, max_tokens)
+        return _call(primary, messages, temperature, max_tokens), primary
     except (requests.RequestException, RuntimeError) as e:
         fallback = s["fallback_model"]
         if primary == fallback:
             raise
         log.warning("Model %s failed (%s); retrying with %s", primary, e, fallback)
-        return _call(fallback, messages, temperature, max_tokens)
+        return _call(fallback, messages, temperature, max_tokens), fallback
+
+
+def chat(messages: list[dict], model: str | None = None,
+         temperature: float = 0.0, max_tokens: int = 1024) -> str:
+    """Send messages to Llama via Cortex. Falls back to the smaller model if the main one fails."""
+    return chat_with_model(messages, model, temperature, max_tokens)[0]

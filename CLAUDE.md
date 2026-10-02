@@ -34,6 +34,9 @@ def get_settings() -> dict: ...
 # hiresafe/llm.py (A)
 def chat(messages: list[dict], model: str | None = None,
          temperature: float = 0.0, max_tokens: int = 1024) -> str: ...
+def chat_with_model(messages: list[dict], model: str | None = None,
+                    temperature: float = 0.0, max_tokens: int = 1024) -> tuple[str, str]: ...
+    # (content, model_that_actually_answered); differs from the requested model after a fallback
 
 # hiresafe/snowflake_client.py (A)
 def get_conn(): ...                                   # cached connection
