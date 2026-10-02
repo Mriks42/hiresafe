@@ -20,6 +20,11 @@ _RULES = [
             r"\b(?:pay|payment)\s+(?:for|of)\s+(?:your\s+own\s+)?(?:equipment|starter kit|training materials?)\b",
             r"\bupfront\s+(?:cost|payment|fee)\b",
             r"\bbuy\s+(?:your\s+own\s+)?(?:equipment|laptop|starter kit)\b",
+            # Money demanded from the candidate, e.g. "no offer without giving $5,000 bond".
+            r"\bwithout\s+(?:paying|giving|sending|providing|depositing)\b[^\n]{0,60}?"
+            r"(?:\$\s?\d[\d,]*|\b(?:dollars?|bond|deposit|fee)\b)",
+            r"\b(?:must|need\s+to|required\s+to|have\s+to)\s+(?:pay|give|send|deposit|post)\b[^\n.]{0,40}?"
+            r"(?:\$\s?\d[\d,]*|\b(?:dollars?|bond|check|deposit|fee)\b)",
         ],
         "explanation": "Legitimate employers never ask candidates to pay fees or buy equipment before being hired.",
     },
