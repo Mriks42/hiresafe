@@ -10,6 +10,7 @@ from hiresafe.store import get_tally
 
 SAMPLES_PATH = Path(__file__).parent / "data" / "sample_messages.json"
 PASTE_OWN = "✍️ Paste my own message"
+MIN_WORDS = 8  # shorter input can't be judged meaningfully
 
 VERDICT_STYLE = {  # label, background, text color
     "likely_scam": ("🚨 Likely Scam", "#fde2e1", "#b42318"),
@@ -149,9 +150,12 @@ def main() -> None:
     )
 
     clicked = st.button("Check", type="primary")
+    too_short = len(text.split()) < MIN_WORDS
     if clicked and not text.strip():
         st.warning("Paste a message above first.")
-    if clicked and text.strip():
+    elif clicked and too_short:
+        st.warning("That's too short to judge. Paste the full message: a job posting, email, or text.")
+    if clicked and not too_short:
         with st.spinner("Checking with Llama 3.1 on Snowflake Cortex…"):
             result = check(text)
         render_result(text, result)

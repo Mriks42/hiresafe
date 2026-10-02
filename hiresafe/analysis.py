@@ -35,6 +35,9 @@ Rules:
 - Every "quote" MUST be copied character-for-character from the message. Keep quotes short (2-12 words).
   Never paraphrase. If you cannot quote it exactly, leave that flag out.
 - A legitimate message can have zero red flags; do not invent flags.
+- Base the verdict only on concrete red flags in the text. Gibberish, very short text, or text that
+  isn't about a job is NOT evidence of a scam: with no red flags, use a low risk_score and say in the
+  summary that there isn't enough information to judge.
 - Give 2-4 advice items."""
 
 
