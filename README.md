@@ -76,9 +76,16 @@ LLMs sometimes "quote" text that isn't there. HireSafe checks every quote agains
 
 ## Evaluation
 
-<!-- Mrigank: final numbers from scripts/evaluate.py go here (before/after similarity). -->
+[`scripts/evaluate.py`](scripts/evaluate.py) runs the full pipeline on 100 postings from the EMSCAD dataset (50 fraudulent, 50 real). The dataset is split in half: the similarity cutoff (0.92) was chosen on one half with [`scripts/similarity_cutoffs.py`](scripts/similarity_cutoffs.py), and these numbers come from the other half. Postings used as known scams are excluded. A posting counts as flagged if the verdict is `suspicious` or `likely_scam`. Same 100 postings, with and without similarity in the risk score:
 
-_Coming soon._
+| Risk score uses | Precision | Recall | F1 |
+|---|---|---|---|
+| Llama 3.1 70B + rules | 1.00 | 0.12 | 0.21 |
+| Llama 3.1 70B + rules + Snowflake similarity search | 1.00 | 0.42 | 0.59 |
+
+No real posting was flagged in either run. Between 0% and 11% of the quotes proposed by the model across our runs did not appear verbatim in the input; HireSafe drops those before showing results.
+
+**Limits:** EMSCAD postings are from 2012–2014 and mostly read like normal job ads. HireSafe is aimed at modern recruiting scams (fees, gift cards, messaging apps, urgency), which this dataset barely contains, so these numbers say little about how it does on the modern messages it's built for. Every run is saved to `HIRESAFE.APP.EVAL_RESULTS`.
 
 ## Run it yourself
 
