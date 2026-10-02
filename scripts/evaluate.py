@@ -1,6 +1,9 @@
 """Evaluate pipeline.check() on a balanced sample of EMSCAD postings from JOB_POSTINGS.
 
-Usage:  .venv/bin/python scripts/evaluate.py [--n 50] [--workers 6] [--seed test1] [--no-save]
+Usage:  .venv/bin/python scripts/evaluate.py [--n 50] [--workers 6] [--seed test1] [--no-similarity] [--no-save]
+
+--no-similarity turns off the similarity part of the risk score (for a before/after comparison
+on the same sample); similar scams are still looked up.
 
 - Samples n fraudulent + n real postings from the TEST half of the data (split by HASH(job_id));
   scripts/similarity_cutoffs.py tunes on the other half. --seed picks the sample order, so the
@@ -25,6 +28,7 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
+from hiresafe import pipeline  # noqa: E402
 from hiresafe.pipeline import check  # noqa: E402
 from hiresafe.snowflake_client import get_conn, run_query  # noqa: E402
 
@@ -97,9 +101,12 @@ def main() -> None:
     ap.add_argument("--n", type=int, default=50, help="postings per class")
     ap.add_argument("--workers", type=int, default=6)
     ap.add_argument("--seed", default="test1", help="sample order; change it for a fresh sample")
+    ap.add_argument("--no-similarity", action="store_true", help="ignore similarity in the risk score")
     ap.add_argument("--no-save", action="store_true", help="don't write to EVAL_RESULTS")
     args = ap.parse_args()
 
+    if args.no_similarity:
+        pipeline.SIMILARITY_CUTOFF = float("inf")  # no match can reach it
     get_conn()  # open the shared connection once, before the threads start
     rows = run_query(SAMPLE_SQL, (1, args.seed, args.n)) + run_query(SAMPLE_SQL, (0, args.seed, args.n))
     print(f"Sample: {sum(r['FRAUDULENT'] for r in rows)} fraudulent + "
@@ -139,7 +146,7 @@ def main() -> None:
     if args.no_save:
         return
     run_id = uuid.uuid4().hex[:8]
-    notes = (f"EMSCAD balanced {args.n}+{args.n}, test half, seed={args.seed}; positive=suspicious|likely_scam; "
+    notes = (f"EMSCAD balanced {args.n}+{args.n}, test half, seed={args.seed}, similarity_score={'off' if args.no_similarity else 'on'}; positive=suspicious|likely_scam; "
              f"strict likely_scam P={strict['precision']:.2f} R={strict['recall']:.2f} F1={strict['f1']:.2f}; "
              f"models={dict(models)}; errors={len(errors)}; desc>={MIN_DESCRIPTION_CHARS} chars")
     run_query(SAVE_SQL, (run_id, len(ok), flagged["precision"], flagged["recall"], flagged["f1"],
