@@ -5,7 +5,7 @@ from pathlib import Path
 
 import streamlit as st
 
-from hiresafe.pipeline import check, matches_known_scam
+from hiresafe.pipeline import SIMILARITY_CUTOFF, check, matches_known_scam
 from hiresafe.store import get_tally
 
 SAMPLES_PATH = Path(__file__).parent / "data" / "sample_messages.json"
@@ -96,9 +96,11 @@ def render_result(text: str, result: dict) -> None:
     else:
         st.write("No red flags found.")
 
-    if result["similar"]:
+    # Only show matches strong enough to count in the score; genuine postings can reach ~0.90.
+    close_matches = [s for s in result["similar"] if s["score"] >= SIMILARITY_CUTOFF]
+    if close_matches:
         st.subheader("Similar known scams")
-        for s in result["similar"]:
+        for s in close_matches:
             preview = s["text"][:300] + ("…" if len(s["text"]) > 300 else "")
             with st.expander(md(f"{s['source']} · similarity {s['score']:.2f}")):
                 st.write(md(preview))

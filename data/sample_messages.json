@@ -7,11 +7,11 @@
     "text": "Hi! I'm Sarah from TalentBridge HR 👋 We saw your resume online and you're PRE-APPROVED for our Remote Data Entry Assistant position. Pay is $45/hour, only 2-3 hours a day, work from home. No interview needed, you can start today! To set up your account we just need a $35 registration fee (Zelle or Bitcoin is fastest). We'll also send you a starter kit — just cover the $60 shipping cost. Please message me on WhatsApp ASAP so we don't give the spot to someone else, only a few slots left!"
   },
   {
-    "id": "scam_text_reshipping",
-    "title": "Text message — \"Package Processing Agent\"",
-    "channel": "SMS",
+    "id": "scam_subtle_fake_check",
+    "title": "Email — \"Remote Data Analyst\" job offer (subtle scam)",
+    "channel": "Email",
     "expected_verdict": "likely_scam",
-    "text": "Congratulations! You've been selected as a Package Processing Agent for Global Logistics Partners. Job is simple: you'll receive packages at your home and reship packages to our overseas clients, we pay $28/package plus a $500/week guarantee. First task: we're mailing you a cashier's check for $1,200 to cover your first supplies order — just deposit the check and send $900 of it back to our supplier via gift cards. Reply YES to confirm and text us on Telegram to get started today, limited spots available!"
+    "text": "Hi Aryan,\n\nThank you for completing the written interview with our hiring team over Teams chat yesterday. We're pleased to offer you the Remote Data Analyst (Entry Level) position at Meridian Health Partners: $34/hour, 30 hours per week, fully remote.\n\nTo begin onboarding, please reply with a photo of your driver's license and complete the direct deposit form attached. Since you'll be working from home, our finance department will mail you a check for your home-office setup. Once it clears, you'll purchase your laptop and software from our approved equipment vendor, whose details we'll share after you deposit it.\n\nPlease confirm your acceptance by Friday so we can hold your start date.\n\nBest regards,\nDaniel Brooks\nTalent Acquisition, Meridian Health Partners\nd.brooks@meridianhealth-careers.com"
   },
   {
     "id": "legit_recruiter_email",
