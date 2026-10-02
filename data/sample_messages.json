@@ -1,0 +1,23 @@
+[
+  {
+    "id": "scam_whatsapp_task",
+    "title": "WhatsApp — \"Remote Data Entry\" task job",
+    "channel": "WhatsApp",
+    "expected_verdict": "likely_scam",
+    "text": "Hi! I'm Sarah from TalentBridge HR 👋 We saw your resume online and you're PRE-APPROVED for our Remote Data Entry Assistant position. Pay is $45/hour, only 2-3 hours a day, work from home. No interview needed, you can start today! To set up your account we just need a $35 registration fee (Zelle or Bitcoin is fastest). We'll also send you a starter kit — just cover the $60 shipping cost. Please message me on WhatsApp ASAP so we don't give the spot to someone else, only a few slots left!"
+  },
+  {
+    "id": "scam_text_reshipping",
+    "title": "Text message — \"Package Processing Agent\"",
+    "channel": "SMS",
+    "expected_verdict": "likely_scam",
+    "text": "Congratulations! You've been selected as a Package Processing Agent for Global Logistics Partners. Job is simple: you'll receive packages at your home and reship packages to our overseas clients, we pay $28/package plus a $500/week guarantee. First task: we're mailing you a cashier's check for $1,200 to cover your first supplies order — just deposit the check and send $900 of it back to our supplier via gift cards. Reply YES to confirm and text us on Telegram to get started today, limited spots available!"
+  },
+  {
+    "id": "legit_recruiter_email",
+    "title": "Email — Software Engineer interview request",
+    "channel": "Email",
+    "expected_verdict": "looks_legit",
+    "text": "Hi Aryan,\n\nThanks for applying to the Software Engineer, Backend role at Northline Analytics. I reviewed your resume and would love to set up a 30-minute phone screen with our engineering manager next week.\n\nCould you share a couple of times that work on Tuesday or Wednesday? We're in the Mountain time zone. If it's easier, feel free to grab a slot directly on our scheduling page: careers.northlineanalytics.com/schedule.\n\nAs a reminder, our interview process is: phone screen, a take-home exercise, then a final panel interview. There's no cost to you at any step, and all offers come with a written offer letter from our HR team.\n\nLooking forward to chatting,\nPriya Raman\nTalent Acquisition, Northline Analytics\npriya.raman@northlineanalytics.com"
+  }
+]
