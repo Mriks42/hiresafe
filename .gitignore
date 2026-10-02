@@ -216,3 +216,9 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# HireSafe
+.streamlit/secrets.toml
+.venv/
+data/*.csv
+.DS_Store
