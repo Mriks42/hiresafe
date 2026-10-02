@@ -132,6 +132,15 @@ def run_rules(text: str) -> list[dict]:
     return flags
 
 
+
+CATEGORIES = [rule["category"] for rule in _RULES]
+
+
+def describe_category(category: str) -> str | None:
+    """Plain-English description of a rule category, or None if unknown."""
+    return next((r["explanation"] for r in _RULES if r["category"] == category), None)
+
+
 if __name__ == "__main__":
     _SMOKE_TESTS = [
         (
