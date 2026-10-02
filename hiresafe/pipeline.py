@@ -12,7 +12,7 @@ import time
 from hiresafe.analysis import analyze
 from hiresafe.config import get_settings
 from hiresafe.rules import run_rules
-from hiresafe.verify import verify_quotes
+from hiresafe.verify import normalize, verify_quotes
 
 # Stubs until A pushes store.py / similarity.py; the real modules take over automatically once they exist.
 try:
@@ -47,10 +47,27 @@ def _verdict(score: int) -> str:
     return "looks_legit"
 
 
+def _overlaps(a: dict, b: dict) -> bool:
+    qa, qb = normalize(a["quote"]), normalize(b["quote"])
+    return qa in qb or qb in qa
+
+
 def _merge_flags(rule_flags: list[dict], llm_flags: list[dict]) -> list[dict]:
-    """Rule flags first; skip LLM flags that repeat a quote a rule already caught."""
-    seen = {f["quote"].lower() for f in rule_flags}
-    return rule_flags + [f for f in llm_flags if f["quote"].lower() not in seen]
+    """Combine flags so no two quotes overlap (e.g. "registration fee" vs "$35 registration fee").
+
+    Rule flags come first and keep their category. For each LLM flag:
+    - no overlap: keep it;
+    - overlaps exactly one flag: merge them, keeping the longer quote and the earlier flag's category;
+    - overlaps several flags: drop it, since those more specific flags already cover it.
+    """
+    merged = [dict(f) for f in rule_flags]
+    for flag in llm_flags:
+        hits = [m for m in merged if _overlaps(m, flag)]
+        if not hits:
+            merged.append(dict(flag))
+        elif len(hits) == 1 and len(flag["quote"]) > len(hits[0]["quote"]):
+            hits[0]["quote"] = flag["quote"]
+    return merged
 
 
 def _merge_advice(llm_advice: list[str]) -> list[str]:
@@ -73,7 +90,9 @@ def check(text: str) -> dict:
                "summary": "AI analysis was unavailable, so this result is based on rule checks only."}
         model = "rules-only"
 
-    flags, dropped = verify_quotes(text, _merge_flags(rule_flags, llm["red_flags"]))
+    # Verify LLM quotes before merging, so an invented quote can never replace a rule's real one.
+    llm_flags, dropped = verify_quotes(text, llm["red_flags"])
+    flags = _merge_flags(rule_flags, llm_flags)
     risk_score = max(llm["risk_score"], rule_score)
 
     try:
