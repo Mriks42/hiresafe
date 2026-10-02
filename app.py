@@ -5,7 +5,6 @@ from pathlib import Path
 
 import streamlit as st
 
-from hiresafe.agent import investigate
 from hiresafe.pipeline import check, matches_known_scam
 from hiresafe.store import get_tally
 
@@ -115,62 +114,6 @@ def render_result(text: str, result: dict) -> None:
     st.info(DISCLAIMER)
 
 
-TOOL_LABELS = {
-    "run_rules": "🧾 Ran the red-flag rules",
-    "search_known_scams": "🔁 Searched known scams in Snowflake",
-    "check_email_domain": "📧 Checked the email domain",
-    "get_scam_pattern": "📚 Looked up a scam pattern",
-    "final_verdict": "⚖️ Reached a verdict",
-}
-
-
-def _describe_observation(action: str, obs: dict) -> str:
-    """One plain-English line summarizing a tool result."""
-    if "error" in obs:
-        return f"Tool error: {obs['error']}"
-    if action == "run_rules":
-        if not obs["flags"]:
-            return "No rule-based red flags."
-        cats = sorted({f["category"].replace("_", " ") for f in obs["flags"]})
-        return f"{len(obs['flags'])} red flag(s): {', '.join(cats)}."
-    if action == "search_known_scams":
-        if not obs["matches"]:
-            return "No close matches to known scams."
-        top = obs["matches"][0]
-        return f"Closest known scam: similarity {top['score']:.2f} ({top['source']})."
-    if action == "check_email_domain":
-        if obs["personal_provider"]:
-            verdict = "a personal email provider, not a company domain"
-        elif obs["matches_claimed_company"]:
-            verdict = "matches the claimed company"
-        else:
-            verdict = "does not match the claimed company"
-        return f"`{obs['domain']}`: {verdict}."
-    if action == "get_scam_pattern":
-        return obs["pattern"]
-    return json.dumps(obs)
-
-
-def render_investigation(inv: dict) -> None:
-    st.subheader("🔎 Investigation timeline")
-    st.caption("Llama 3.1 70B investigating step by step with HireSafe's tools (max 4 steps).")
-    for s in inv["steps"]:
-        with st.container(border=True):
-            st.markdown(f"**Step {s['step']} · {TOOL_LABELS[s['action']]}**")
-            if s["thought"]:
-                st.caption(md(f"💭 {s['thought']}"))
-            if s["action"] == "final_verdict":
-                label, _, _ = VERDICT_STYLE[inv["verdict"]]
-                st.markdown(f"**{label}**, risk {inv['risk_score']}/100")
-                for reason in inv["reasons"]:
-                    st.markdown(md(f"- {reason}"))
-            else:
-                st.markdown(md(_describe_observation(s["action"], s["observation"])))
-    if not inv["completed"]:
-        st.warning("The investigator stopped before reaching a verdict. The main result above still stands.")
-    st.caption(f"Investigation: {len(inv['steps'])} step(s) · {inv['latency_ms']} ms · {inv['model'] or 'no model'}")
-
-
 def render_sidebar() -> None:
     st.sidebar.header("Today on HireSafe")
     try:
@@ -203,7 +146,6 @@ def main() -> None:
         placeholder="Paste a job description, recruiter email, LinkedIn message, or text here…",
     )
 
-    run_agent = st.toggle("Also run the investigator agent (shows its steps, ~5 s more)")
     clicked = st.button("Check", type="primary")
     if clicked and not text.strip():
         st.warning("Paste a message above first.")
@@ -211,10 +153,6 @@ def main() -> None:
         with st.spinner("Checking with Llama 3.1 on Snowflake Cortex…"):
             result = check(text)
         render_result(text, result)
-        if run_agent:
-            with st.spinner("Investigator agent at work…"):
-                inv = investigate(text)
-            render_investigation(inv)
 
     render_sidebar()  # after the check, so the tally includes it
 

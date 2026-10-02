@@ -137,6 +137,10 @@ Without the Snowflake tables, HireSafe still works: logging, the tally, and simi
 
 [`skills/hiresafe-check/SKILL.md`](skills/hiresafe-check/SKILL.md) is an [Agent Skill](https://agentskills.io) that teaches any compatible agent (Claude Code and others) to run HireSafe on a message and explain the result.
 
+## Experimental: investigator agent
+
+[`hiresafe/agent.py`](hiresafe/agent.py) is a prototype in which Llama investigates a message step by step, choosing tools (rule checks, known-scam search, email-domain check) through a small JSON tool-calling loop we wrote, since Cortex has no native tool calling for open-weight models. It isn't part of the app: in our tests it mostly repeated the main check's findings, so it didn't earn a place in the product.
+
 ## Project layout
 
 ```
@@ -148,6 +152,7 @@ hiresafe/pipeline.py       check(): combines everything, scoring
 hiresafe/llm.py            Cortex chat client with fallback
 hiresafe/similarity.py     similar_scams() via Snowflake vector search
 hiresafe/store.py          logging and daily tally
+hiresafe/agent.py          experimental investigator agent (not used by the app)
 scripts/check.py           CLI: stdin → JSON
 scripts/evaluate.py        precision / recall / F1 / unverified-quote rate
 scripts/setup_snowflake.sql, load_data.py, build_embeddings.py
