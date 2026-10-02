@@ -5,9 +5,9 @@ Two people build this in parallel. Each runs their own Claude Code session on th
 and both sessions read this file.
 
 - **Person A — Mrigank** (GitHub: Mriks42): Snowflake, data, LLM client, logging, similarity search,
-  evaluation, and the stretch investigator agent.
+  and evaluation.
 - **Person B — Aryan**: scam rules, the analysis prompt, quote verification, the pipeline,
-  the Streamlit UI, demo data, the CLI, the Agent Skill, and the README draft.
+  the Streamlit UI, demo data, the CLI, the Agent Skill, the README draft, and the stretch investigator agent.
 
 At the start of a session, the human says which person they are. **Only create or edit files owned
 by that person.** If a change is needed in the other person's file, don't make it; write the exact
@@ -15,9 +15,9 @@ change as a short note for the human to pass on.
 
 | File | Owner |
 |---|---|
-| `hiresafe/config.py`, `hiresafe/snowflake_client.py`, `hiresafe/llm.py`, `hiresafe/store.py`, `hiresafe/similarity.py`, `hiresafe/agent.py` | A |
+| `hiresafe/config.py`, `hiresafe/snowflake_client.py`, `hiresafe/llm.py`, `hiresafe/store.py`, `hiresafe/similarity.py` | A |
 | `scripts/setup_snowflake.sql`, `scripts/load_data.py`, `scripts/build_embeddings.py`, `scripts/evaluate.py` | A |
-| `hiresafe/rules.py`, `hiresafe/analysis.py`, `hiresafe/verify.py`, `hiresafe/pipeline.py`, `app.py` | B |
+| `hiresafe/rules.py`, `hiresafe/analysis.py`, `hiresafe/verify.py`, `hiresafe/pipeline.py`, `hiresafe/agent.py`, `app.py` | B |
 | `scripts/check.py`, `data/sample_messages.json`, `skills/hiresafe-check/SKILL.md`, `README.md` (A adds the eval section) | B |
 | `requirements.txt`, `.gitignore`, `CLAUDE.md`, `hiresafe/__init__.py` | Shared: tell the other person before changing |
 
@@ -65,6 +65,11 @@ def verify_quotes(text: str, flags: list[dict]) -> tuple[list[dict], int]: ...  
 def check(text: str, log_result: bool = True) -> dict: ...  # log_result=False skips CHECKS (evaluate.py)
     # {"verdict", "risk_score", "flags", "similar", "summary", "advice",
     #  "dropped_quotes", "model", "latency_ms"}
+
+# hiresafe/agent.py (B)
+def investigate(text: str) -> dict: ...
+    # {"verdict", "risk_score", "reasons", "steps": [{"step", "thought", "action", "args", "observation"}],
+    #  "completed", "model", "latency_ms"}
 ```
 
 ## What we're building
@@ -150,7 +155,7 @@ Balanced sample from `JOB_POSTINGS` (50 fraudulent + 50 real; thread pool of 4�
 `pipeline.check`. Report precision, recall, F1, and the unverified-quote rate. Save to `EVAL_RESULTS`,
 print a markdown table for the README. Only report numbers that were actually measured.
 
-## Stretch: investigator agent (A builds `agent.py`; B adds a UI panel) — only if the core works by ~1:45
+## Stretch: investigator agent (B built `agent.py` and its UI panel) — only if the core works by ~1:45
 Llama acts as an investigator in a loop of at most 4 steps. Each step it outputs one JSON action, our code
 validates and runs it, and the result goes back to the model. Tools: `search_known_scams(text)`,
 `check_email_domain(email, claimed_company)`, `get_scam_pattern(category)`, `run_rules(text)`,
