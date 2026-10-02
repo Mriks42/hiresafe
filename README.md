@@ -80,10 +80,10 @@ LLMs sometimes "quote" text that isn't there. HireSafe checks every quote agains
 
 | Risk score uses | Precision | Recall | F1 |
 |---|---|---|---|
-| Llama 3.1 70B + rules | 1.00 | 0.12 | 0.21 |
-| Llama 3.1 70B + rules + Snowflake similarity search | 1.00 | 0.42 | 0.59 |
+| Llama 3.1 70B + rules | 1.00 | 0.08 | 0.15 |
+| Llama 3.1 70B + rules + Snowflake similarity search | 1.00 | 0.40 | 0.57 |
 
-Measured on commit `0ccfdd8`; the analysis prompt and rules were refined afterwards.
+Both rows use the final prompt and rules, with all 100 checks answered by Llama 3.1 70B. (An earlier prompt scored 0.12 / 0.42 recall on the same sample.)
 
 No real posting was flagged in either run. Between 0% and 11% of the quotes proposed by the model across our runs did not appear verbatim in the input; HireSafe drops those before showing results.
 
