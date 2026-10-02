@@ -10,17 +10,11 @@ import logging
 import time
 
 from hiresafe.analysis import analyze
-from hiresafe.config import get_settings
 from hiresafe.rules import run_rules
+from hiresafe.store import log_check
 from hiresafe.verify import normalize, verify_quotes
 
-# Stubs until A pushes store.py / similarity.py; the real modules take over automatically once they exist.
-try:
-    from hiresafe.store import log_check
-except ImportError:
-    def log_check(input_text: str, result: dict) -> None:
-        return None
-
+# Stub until A pushes similarity.py; the real module takes over automatically once it exists.
 try:
     from hiresafe.similarity import similar_scams
 except ImportError:
@@ -57,7 +51,8 @@ def _merge_flags(rule_flags: list[dict], llm_flags: list[dict]) -> list[dict]:
 
     Rule flags come first and keep their category. For each LLM flag:
     - no overlap: keep it;
-    - overlaps exactly one flag: merge them, keeping the longer quote and the earlier flag's category;
+    - overlaps exactly one flag: merge them, keeping the longer quote and the earlier flag's category
+      (source becomes "rule+llm" when the LLM lengthened a rule's quote);
     - overlaps several flags: drop it, since those more specific flags already cover it.
     """
     merged = [dict(f) for f in rule_flags]
@@ -67,6 +62,8 @@ def _merge_flags(rule_flags: list[dict], llm_flags: list[dict]) -> list[dict]:
             merged.append(dict(flag))
         elif len(hits) == 1 and len(flag["quote"]) > len(hits[0]["quote"]):
             hits[0]["quote"] = flag["quote"]
+            if hits[0]["source"] == "rule":
+                hits[0]["source"] = "rule+llm"
     return merged
 
 
@@ -75,7 +72,8 @@ def _merge_advice(llm_advice: list[str]) -> list[str]:
     return STANDARD_ADVICE + [a for a in llm_advice if a.lower() not in seen]
 
 
-def check(text: str) -> dict:
+def check(text: str, log_result: bool = True) -> dict:
+    """Run the full check. Pass log_result=False (e.g. in evaluate.py) to skip writing to CHECKS."""
     start = time.monotonic()
 
     rule_flags = run_rules(text)
@@ -83,7 +81,7 @@ def check(text: str) -> dict:
 
     try:
         llm = analyze(text)
-        model = get_settings()["model"]
+        model = llm["model"]
     except Exception as e:  # network, auth, or repeated invalid JSON: degrade to rules only
         log.warning("LLM analysis failed, using rules only: %s", e)
         llm = {"risk_score": 0, "red_flags": [], "advice": [],
@@ -113,6 +111,8 @@ def check(text: str) -> dict:
         "latency_ms": round((time.monotonic() - start) * 1000),
     }
 
+    if not log_result:
+        return result
     try:
         log_check(text, result)
     except Exception as e:  # logging must never block the user

@@ -6,13 +6,7 @@ from pathlib import Path
 import streamlit as st
 
 from hiresafe.pipeline import check
-
-# Stub until A pushes store.py; the real get_tally takes over automatically once it exists.
-try:
-    from hiresafe.store import get_tally
-except ImportError:
-    def get_tally() -> dict:
-        return {}
+from hiresafe.store import get_tally
 
 SAMPLES_PATH = Path(__file__).parent / "data" / "sample_messages.json"
 PASTE_OWN = "✍️ Paste my own message"

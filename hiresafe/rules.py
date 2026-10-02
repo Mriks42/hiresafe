@@ -1,5 +1,17 @@
 import re
 
+# Pay at or above these amounts is flagged as unrealistic. Lower thresholds fired on ordinary
+# wages like "$15 per hour" in genuine postings.
+MIN_UNREALISTIC_PAY = {"hour": 100, "hr": 100, "day": 800, "week": 2000, "wk": 2000}
+
+
+def _pay_is_unrealistic(match: re.Match) -> bool:
+    amount = float(match.group("amt").replace(",", ""))
+    return amount >= MIN_UNREALISTIC_PAY[match.group("unit").lower()]
+
+
+# Each rule: regex patterns (case-insensitive). If a pattern has a named group "q", only that group is
+# quoted. An optional "keep" function can reject a match (used for pay thresholds).
 _RULES = [
     {
         "category": "payment_request",
@@ -14,7 +26,9 @@ _RULES = [
     {
         "category": "crypto_or_gift_card",
         "patterns": [
-            r"\b(?:bitcoin|btc|ethereum|usdt|crypto(?:currency)?)\b",
+            # Crypto only in a payment context, so genuine crypto-company postings don't trigger it.
+            r"\b(?:pay|paid|payment|send|sent|deposit|transfer|fee|via|using)\b[^.\n]{0,40}?"
+            r"\b(?P<q>bitcoin|btc|ethereum|usdt|crypto(?:currency)?)\b",
             r"\b(?:gift\s*cards?|itunes\s*card|google\s*play\s*card|amazon\s*gift\s*card)\b",
             r"\bcash(?:ier'?s)?\s+check\b",
             r"\bdeposit\s+(?:the\s+)?check\b",
@@ -38,15 +52,18 @@ _RULES = [
     {
         "category": "unrealistic_pay",
         "patterns": [
-            r"\$\d{2,5}\s*(?:per|/)\s*(?:hour|hr)\b",
-            r"\$\d{3,6}\s*(?:per|/)\s*(?:day|week)\b",
+            r"\$\s?(?P<amt>\d{1,3}(?:,\d{3})+|\d+)(?:\.\d{2})?\s*(?:per|/|an?)\s*(?P<unit>hour|hr|day|week|wk)\b",
         ],
+        "keep": _pay_is_unrealistic,
         "explanation": "Unusually high pay for minimal work is a common lure in job scams.",
     },
     {
         "category": "urgency",
         "patterns": [
-            r"\b(?:act\s+now|urgent(?:ly)?|immediately|right\s+away|limited\s+time|hurry|don'?t\s+miss\s+out|today\s+only|asap)\b",
+            # Not bare "urgent"/"immediately"/"right away": genuine postings say "start immediately" a lot.
+            r"\b(?:act\s+now|limited\s+time|hurry|don'?t\s+miss\s+out|today\s+only|asap)\b",
+            r"\b(?:only\s+)?(?:a\s+)?few\s+(?:slots|spots|positions)\s+(?:left|remaining)\b",
+            r"\blimited\s+(?:slots|spots)\b",
         ],
         "explanation": "Pressuring a candidate to act fast is used to short-circuit normal verification.",
     },
@@ -99,7 +116,9 @@ def run_rules(text: str) -> list[dict]:
     for rule in _RULES:
         for pattern in rule["patterns"]:
             for match in re.finditer(pattern, text, re.IGNORECASE):
-                quote = match.group(0)
+                if "keep" in rule and not rule["keep"](match):
+                    continue
+                quote = match.group("q") if "q" in match.re.groupindex else match.group(0)
                 key = (rule["category"], quote.lower())
                 if key in seen:
                     continue

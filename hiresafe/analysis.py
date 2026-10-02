@@ -3,7 +3,7 @@ import json
 import logging
 import re
 
-from hiresafe.llm import chat
+from hiresafe.llm import chat_with_model
 
 log = logging.getLogger(__name__)
 
@@ -89,16 +89,19 @@ def _validate(data: dict) -> dict:
 
 
 def analyze(text: str) -> dict:
-    """Return the LLM's assessment of `text`. Retries up to MAX_RETRIES times on invalid JSON."""
+    """Return the LLM's assessment of `text`. Retries up to MAX_RETRIES times on invalid JSON.
+
+    Also includes "model": the model that actually answered (llama3.1-8b if the 70b call fell back).
+    """
     messages = [
         {"role": "system", "content": SYSTEM_PROMPT},
         {"role": "user", "content": f"Message to analyze:\n\"\"\"\n{text}\n\"\"\""},
     ]
     last_error = None
     for attempt in range(MAX_RETRIES + 1):
-        raw = chat(messages)
+        raw, model = chat_with_model(messages)
         try:
-            return _validate(_extract_json(raw))
+            return {**_validate(_extract_json(raw)), "model": model}
         except ValueError as e:  # json.JSONDecodeError is a ValueError
             last_error = e
             log.warning("analyze attempt %d returned invalid JSON: %s", attempt + 1, e)
