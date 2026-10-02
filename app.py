@@ -92,7 +92,7 @@ def render_result(text: str, result: dict) -> None:
     st.subheader(f"Red flags ({len(result['flags'])})")
     if result["flags"]:
         for f in result["flags"]:
-            category = f["category"].replace("_", " ")
+            category = "other warning sign" if f["category"] == "other" else f["category"].replace("_", " ")
             st.markdown(md(f'- **"{f["quote"]}"** · _{category}_  \n  {f["explanation"]}'))
     else:
         st.write("No red flags found.")
@@ -111,7 +111,7 @@ def render_result(text: str, result: dict) -> None:
         st.markdown(md(f"- {tip}"))
 
     st.caption(
-        f"Model: {result['model']} (open-weight, via Snowflake Cortex) · {result['latency_ms']} ms · "
+        f"Model: {result['model']} (open-weight, via Snowflake Cortex) · {result['latency_ms'] / 1000:.1f} s · "
         f"{result['dropped_quotes']} unverified AI quote(s) dropped"
     )
     st.info(DISCLAIMER)

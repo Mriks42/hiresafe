@@ -72,9 +72,14 @@ def _merge_flags(rule_flags: list[dict], llm_flags: list[dict]) -> list[dict]:
     return merged
 
 
+MAX_LLM_ADVICE = 2
+
+
 def _merge_advice(llm_advice: list[str]) -> list[str]:
+    """Standard advice first, then up to MAX_LLM_ADVICE new items from the model, all ending in a period."""
     seen = {a.lower() for a in STANDARD_ADVICE}
-    return STANDARD_ADVICE + [a for a in llm_advice if a.lower() not in seen]
+    extra = [a.rstrip() for a in llm_advice if a.lower() not in seen][:MAX_LLM_ADVICE]
+    return STANDARD_ADVICE + [a if a.endswith((".", "!", "?")) else a + "." for a in extra]
 
 
 def check(text: str, log_result: bool = True) -> dict:

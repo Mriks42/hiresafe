@@ -12,7 +12,7 @@ VERDICTS = {"likely_scam", "suspicious", "looks_legit"}
 CATEGORIES = [
     "payment_request", "crypto_or_gift_card", "messaging_app_redirect", "personal_email_domain",
     "unrealistic_pay", "urgency", "instant_hire", "early_personal_info", "task_scam", "reshipping",
-    "impersonation", "vague_details", "other",
+    "fake_check", "impersonation", "vague_details", "other",
 ]
 
 SYSTEM_PROMPT = f"""You are HireSafe, an expert at spotting job and recruitment scams.
@@ -37,6 +37,8 @@ Rules:
 - Read the ENTIRE message. Scammers hide a single request for money inside an otherwise genuine-looking
   posting. If the candidate is asked anywhere to pay, deposit, send a check, or post a bond, the verdict
   is likely_scam, however legitimate the rest looks.
+- Categories: payment_request = the candidate pays or buys anything (fees, equipment from a "vendor");
+  fake_check = a check sent to the candidate; reshipping = receiving and forwarding packages only.
 - A legitimate message can have zero red flags; do not invent flags.
 - Base the verdict only on concrete red flags in the text. Gibberish, very short text, or text that
   isn't about a job is NOT evidence of a scam: with no red flags, use a low risk_score and say in the
