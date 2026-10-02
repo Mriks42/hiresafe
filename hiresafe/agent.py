@@ -12,6 +12,7 @@ import time
 
 from hiresafe.analysis import _extract_json
 from hiresafe.llm import chat_with_model
+from hiresafe.pipeline import SIMILARITY_CUTOFF
 from hiresafe.rules import CATEGORIES, describe_category, run_rules
 from hiresafe.similarity import similar_scams
 
@@ -51,10 +52,14 @@ def _tool_run_rules(text: str, args: dict) -> dict:
 
 
 def _tool_search_known_scams(text: str, args: dict) -> dict:
-    matches = similar_scams(text, k=3)
+    # Same cutoff as the main risk score. Llama treats any returned match as proof, so weaker
+    # matches (genuine postings reach ~0.90) are hidden from it.
+    matches = [m for m in similar_scams(text, k=3) if m["score"] >= SIMILARITY_CUTOFF]
+    if not matches:
+        return {"matches": [], "note": f"no close matches (none scored >= {SIMILARITY_CUTOFF})"}
     return {"matches": [{"score": m["score"], "source": m["source"], "excerpt": m["text"][:200]}
                         for m in matches],
-            "note": "scores >= 0.92 are a strong match" if matches else "no close matches found"}
+            "note": f"these known scams scored >= {SIMILARITY_CUTOFF}: a strong match"}
 
 
 def _tool_check_email_domain(text: str, args: dict) -> dict:
