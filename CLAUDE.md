@@ -6,7 +6,7 @@ and both sessions read this file.
 
 - **Person A — Mrigank** (GitHub: Mriks42): Snowflake, data, LLM client, logging, similarity search,
   evaluation, and the stretch investigator agent.
-- **Person B — [PARTNER NAME]**: scam rules, the analysis prompt, quote verification, the pipeline,
+- **Person B — Aryan**: scam rules, the analysis prompt, quote verification, the pipeline,
   the Streamlit UI, demo data, the CLI, the Agent Skill, and the README draft.
 
 At the start of a session, the human says which person they are. **Only create or edit files owned
