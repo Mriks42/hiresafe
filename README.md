@@ -83,6 +83,8 @@ LLMs sometimes "quote" text that isn't there. HireSafe checks every quote agains
 | Llama 3.1 70B + rules | 1.00 | 0.12 | 0.21 |
 | Llama 3.1 70B + rules + Snowflake similarity search | 1.00 | 0.42 | 0.59 |
 
+Measured on commit `0ccfdd8`; the analysis prompt and rules were refined afterwards.
+
 No real posting was flagged in either run. Between 0% and 11% of the quotes proposed by the model across our runs did not appear verbatim in the input; HireSafe drops those before showing results.
 
 **Limits:** EMSCAD postings are from 2012–2014 and mostly read like normal job ads. HireSafe is aimed at modern recruiting scams (fees, gift cards, messaging apps, urgency), which this dataset barely contains, so these numbers say little about how it does on the modern messages it's built for. Every run is saved to `HIRESAFE.APP.EVAL_RESULTS`.
