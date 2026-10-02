@@ -11,15 +11,9 @@ import time
 
 from hiresafe.analysis import analyze
 from hiresafe.rules import run_rules
+from hiresafe.similarity import similar_scams
 from hiresafe.store import log_check
 from hiresafe.verify import normalize, verify_quotes
-
-# Stub until A pushes similarity.py; the real module takes over automatically once it exists.
-try:
-    from hiresafe.similarity import similar_scams
-except ImportError:
-    def similar_scams(text: str, k: int = 3) -> list[dict]:
-        return []
 
 log = logging.getLogger(__name__)
 
