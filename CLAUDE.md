@@ -62,7 +62,7 @@ def analyze(text: str) -> dict: ...
 def verify_quotes(text: str, flags: list[dict]) -> tuple[list[dict], int]: ...  # (kept, dropped_count)
 
 # hiresafe/pipeline.py (B)
-def check(text: str) -> dict: ...
+def check(text: str, log_result: bool = True) -> dict: ...  # log_result=False skips CHECKS (evaluate.py)
     # {"verdict", "risk_score", "flags", "similar", "summary", "advice",
     #  "dropped_quotes", "model", "latency_ms"}
 ```
