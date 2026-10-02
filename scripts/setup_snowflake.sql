@@ -26,6 +26,8 @@ CREATE TABLE IF NOT EXISTS JOB_POSTINGS (
 );
 
 -- Known scam texts for similarity search; embedding filled by scripts/build_embeddings.py
+-- (e5-base-v2 via SNOWFLAKE.CORTEX.EMBED_TEXT_768, so 768 dims)
+-- (e5-base-v2 via SNOWFLAKE.CORTEX.EMBED_TEXT_768, so 768 dims)
 CREATE TABLE IF NOT EXISTS KNOWN_SCAMS (
     id        NUMBER AUTOINCREMENT,
     source    STRING,
