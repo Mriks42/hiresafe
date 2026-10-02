@@ -5,7 +5,7 @@ from pathlib import Path
 
 import streamlit as st
 
-from hiresafe.pipeline import check
+from hiresafe.pipeline import check, matches_known_scam
 from hiresafe.store import get_tally
 
 SAMPLES_PATH = Path(__file__).parent / "data" / "sample_messages.json"
@@ -73,6 +73,9 @@ def render_verdict(result: dict) -> None:
     )
     if result["summary"]:
         st.markdown(md(result["summary"]))
+    if matches_known_scam(result["similar"]):
+        st.markdown(f"🔁 **Closely matches a known scam** (similarity {result['similar'][0]['score']:.2f}). "
+                    "See below.")
 
 
 def render_result(text: str, result: dict) -> None:

@@ -2,7 +2,11 @@
 
 Scoring (kept simple so it's easy to explain):
 - rule_score = 25 points per distinct rule category matched, capped at 100.
-- risk_score = max(llm_score, rule_score): deterministic rules can raise the LLM's score, never lower it.
+- similarity_score = SIMILARITY_SCORE (50, i.e. "suspicious") if the closest known scam scores
+  >= SIMILARITY_CUTOFF, else 0. The cutoff was picked on a tuning half of EMSCAD, where the highest
+  genuine posting scored 0.896; 39% of fraudulent postings scored >= 0.93 and 59% >= 0.90.
+- risk_score = max(llm_score, rule_score, similarity_score): rules and similarity can raise the
+  LLM's score, never lower it.
 - verdict: risk_score >= 70 -> likely_scam, >= 35 -> suspicious, otherwise looks_legit.
 If the LLM call fails entirely, we fall back to the rule score alone so the user still gets an answer.
 """
@@ -20,11 +24,18 @@ log = logging.getLogger(__name__)
 POINTS_PER_RULE_CATEGORY = 25
 LIKELY_SCAM_THRESHOLD = 70
 SUSPICIOUS_THRESHOLD = 35
+SIMILARITY_CUTOFF = 0.92
+SIMILARITY_SCORE = 50
 STANDARD_ADVICE = [
     "Don't pay anything to apply for or accept a job: no fees, equipment, or training costs.",
     "Verify the job on the company's official careers page or by calling their main number.",
     "Report suspected scams at ReportFraud.ftc.gov.",
 ]
+
+
+def matches_known_scam(similar: list[dict]) -> bool:
+    """True if the closest known scam is similar enough to count toward the risk score."""
+    return bool(similar) and similar[0]["score"] >= SIMILARITY_CUTOFF
 
 
 def _verdict(score: int) -> str:
@@ -85,13 +96,15 @@ def check(text: str, log_result: bool = True) -> dict:
     # Verify LLM quotes before merging, so an invented quote can never replace a rule's real one.
     llm_flags, dropped = verify_quotes(text, llm["red_flags"])
     flags = _merge_flags(rule_flags, llm_flags)
-    risk_score = max(llm["risk_score"], rule_score)
 
     try:
         similar = similar_scams(text, k=3)
     except Exception as e:
         log.warning("similar_scams failed: %s", e)
         similar = []
+    similarity_score = SIMILARITY_SCORE if matches_known_scam(similar) else 0
+
+    risk_score = max(llm["risk_score"], rule_score, similarity_score)
 
     result = {
         "verdict": _verdict(risk_score),
