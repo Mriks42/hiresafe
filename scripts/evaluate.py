@@ -1,9 +1,10 @@
 """Evaluate pipeline.check() on a balanced sample of EMSCAD postings from JOB_POSTINGS.
 
-Usage:  .venv/bin/python scripts/evaluate.py [--n 50] [--workers 6] [--no-save]
+Usage:  .venv/bin/python scripts/evaluate.py [--n 50] [--workers 6] [--seed test1] [--no-save]
 
-- Samples n fraudulent + n real postings (fixed order via HASH, so reruns use the same sample).
-  Fraudulent postings already in KNOWN_SCAMS are excluded, so similarity search can't see them.
+- Samples n fraudulent + n real postings from the TEST half of the data (split by HASH(job_id));
+  scripts/similarity_cutoffs.py tunes on the other half. --seed picks the sample order, so the
+  same seed reruns the same sample. Postings already in KNOWN_SCAMS are excluded.
 - Runs check(text, log_result=False) so evaluation doesn't fill today's tally.
 - "Predicted scam" = verdict suspicious or likely_scam; strict row counts likely_scam only.
 - Unverified-quote rate = dropped quotes / (dropped + LLM quotes kept in the final flags).
@@ -36,9 +37,10 @@ SELECT job_id, fraudulent, {", ".join(FIELDS)}
 FROM HIRESAFE.APP.JOB_POSTINGS
 WHERE fraudulent = %s
   AND LENGTH(description) >= {MIN_DESCRIPTION_CHARS}
+  AND MOD(ABS(HASH(job_id, 'split')), 2) = 1
   AND job_id NOT IN (SELECT TRY_TO_NUMBER(SPLIT_PART(source, '#', 2))
                      FROM HIRESAFE.APP.KNOWN_SCAMS WHERE source LIKE 'EMSCAD%%')
-ORDER BY HASH(job_id, 'eval')
+ORDER BY HASH(job_id, %s)
 LIMIT %s
 """
 
@@ -94,11 +96,12 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--n", type=int, default=50, help="postings per class")
     ap.add_argument("--workers", type=int, default=6)
+    ap.add_argument("--seed", default="test1", help="sample order; change it for a fresh sample")
     ap.add_argument("--no-save", action="store_true", help="don't write to EVAL_RESULTS")
     args = ap.parse_args()
 
     get_conn()  # open the shared connection once, before the threads start
-    rows = run_query(SAMPLE_SQL, (1, args.n)) + run_query(SAMPLE_SQL, (0, args.n))
+    rows = run_query(SAMPLE_SQL, (1, args.seed, args.n)) + run_query(SAMPLE_SQL, (0, args.seed, args.n))
     print(f"Sample: {sum(r['FRAUDULENT'] for r in rows)} fraudulent + "
           f"{sum(1 - r['FRAUDULENT'] for r in rows)} real postings, {args.workers} workers")
 
@@ -136,7 +139,7 @@ def main() -> None:
     if args.no_save:
         return
     run_id = uuid.uuid4().hex[:8]
-    notes = (f"EMSCAD balanced {args.n}+{args.n}; positive=suspicious|likely_scam; "
+    notes = (f"EMSCAD balanced {args.n}+{args.n}, test half, seed={args.seed}; positive=suspicious|likely_scam; "
              f"strict likely_scam P={strict['precision']:.2f} R={strict['recall']:.2f} F1={strict['f1']:.2f}; "
              f"models={dict(models)}; errors={len(errors)}; desc>={MIN_DESCRIPTION_CHARS} chars")
     run_query(SAVE_SQL, (run_id, len(ok), flagged["precision"], flagged["recall"], flagged["f1"],
